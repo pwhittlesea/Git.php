@@ -35,10 +35,11 @@ class Git {
 	 * @access  public
 	 * @param   string  repository path
 	 * @param   string  directory to source
+	 * @param   bool    is the repo a bare one?
 	 * @return  GitRepo
 	 */	
-	public static function &create($repo_path, $source = null) {
-		return GitRepo::create_new($repo_path, $source);
+	public static function &create($repo_path, $source = null, $bare = false) {
+		return GitRepo::create_new($repo_path, $source, $bare);
 	}
 
 	/**
@@ -93,16 +94,20 @@ class GitRepo {
 	 * @access  public
 	 * @param   string  repository path
 	 * @param   string  directory to source
+ 	 * @param   bool    is the repo a bare one?
 	 * @return  GitRepo
 	 */	
-	public static function &create_new($repo_path, $source = null) {
-		if (is_dir($repo_path) && file_exists($repo_path."/.git") && is_dir($repo_path."/.git")) {
+	public static function &create_new($repo_path, $source = null, $bare = false) {
+		if (is_dir($repo_path) && ((file_exists($repo_path."/.git") && is_dir($repo_path."/.git")) || (file_exists($repo_path."/HEAD") && is_dir($repo_path."/objects")))) {
 			throw new Exception('"$repo_path" is already a git repository');
 		} else {
-			$repo = new self($repo_path, true, false);
+			$repo = new self($repo_path, true, false, $bare);
 			if (is_string($source))
 				$repo->clone_from($source);
-			else $repo->run('init');
+			else if($bare)
+				$repo->run('init --bare');
+			else 
+				$repo->run('init');
 			return $repo;
 		}
 	}
@@ -115,11 +120,12 @@ class GitRepo {
 	 * @access  public
 	 * @param   string  repository path
 	 * @param   bool    create if not exists?
+ 	 * @param   bool    is the repo a bare one?
 	 * @return  void
 	 */
-	public function __construct($repo_path = null, $create_new = false, $_init = true) {
+	public function __construct($repo_path = null, $create_new = false, $_init = true, $bare = false) {
 		if (is_string($repo_path))
-			$this->set_repo_path($repo_path, $create_new, $_init);
+			$this->set_repo_path($repo_path, $create_new, $_init, $bare);
 	}
 
 	/**
@@ -130,19 +136,25 @@ class GitRepo {
 	 * @access  public
 	 * @param   string  repository path
 	 * @param   bool    create if not exists?
+ 	 * @param   bool    is the repo a bare one?
 	 * @return  void
 	 */
-	public function set_repo_path($repo_path, $create_new = false, $_init = true) {
+	public function set_repo_path($repo_path, $create_new = false, $_init = true, $bare = false) {
 		if (is_string($repo_path)) {
 			if ($new_path = realpath($repo_path)) {
 				$repo_path = $new_path;
 				if (is_dir($repo_path)) {
-					if (file_exists($repo_path."/.git") && is_dir($repo_path."/.git")) {
+					if ( (file_exists($repo_path."/.git") && is_dir($repo_path."/.git")) || (file_exists($repo_path."/HEAD") && is_dir($repo_path."/objects")) ) {
 						$this->repo_path = $repo_path;
 					} else {
 						if ($create_new) {
 							$this->repo_path = $repo_path;
-							if ($_init) $this->run('init');
+							if ($_init) {
+								if ($bare)
+									$this->run('init --bare');
+								else
+									$this->run('init');
+							}
 						} else {
 							throw new Exception('"$repo_path" is not a git repository');
 						}
@@ -155,7 +167,12 @@ class GitRepo {
 					if ($parent = realpath(dirname($repo_path))) {
 						mkdir($repo_path);
 						$this->repo_path = $repo_path;
-						if ($_init) $this->run('init');
+						if ($_init) {
+							if ($bare)
+								$this->run('init --bare');
+							else
+								$this->run('init');
+						}
 					} else {
 						throw new Exception('cannot create repository in non-existent directory');
 					}
