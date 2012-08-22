@@ -140,47 +140,59 @@ class GitRepo {
 	 * @return  void
 	 */
 	public function set_repo_path($repo_path, $create_new = false, $_init = true, $bare = false) {
-		if (is_string($repo_path)) {
-			if ($new_path = realpath($repo_path)) {
-				$repo_path = $new_path;
-				if (is_dir($repo_path)) {
-					if ( (file_exists($repo_path."/.git") && is_dir($repo_path."/.git")) || (file_exists($repo_path."/HEAD") && is_dir($repo_path."/objects")) ) {
-						$this->repo_path = $repo_path;
-					} else {
-						if ($create_new) {
-							$this->repo_path = $repo_path;
-							if ($_init) {
-								if ($bare)
-									$this->run('init --bare');
-								else
-									$this->run('init');
-							}
-						} else {
-							throw new Exception('"$repo_path" is not a git repository');
-						}
-					}
-				} else {
-					throw new Exception('"$repo_path" is not a directory');
-				}
-			} else {
-				if ($create_new) {
-					if ($parent = realpath(dirname($repo_path))) {
-						mkdir($repo_path);
-						$this->repo_path = $repo_path;
-						if ($_init) {
-							if ($bare)
-								$this->run('init --bare');
-							else
-								$this->run('init');
-						}
-					} else {
-						throw new Exception('cannot create repository in non-existent directory');
-					}
-				} else {
-					throw new Exception('"$repo_path" does not exist');
-				}
-			}
+
+		// Sanity check the path first...
+		if(!is_string($repo_path)){
+			throw new Exception("'$repo_path' is not a valid repository path");
 		}
+
+		// Expand symlinks etc. to give an absolute path
+		$repo_path = realpath($repo_path);
+
+		// Get the parent directory, if possible
+		$parent = realpath(dirname($repo_path));
+
+		// It's a git repository if it contains a .git directory,
+		// or it's a bare repo with a HEAD file and objects dir.
+		$is_repo = (
+		  is_dir($repo_path) && (
+		    is_dir($repo_path."/.git") ||
+			(file_exists($repo_path."/HEAD") && is_dir($repo_path."/objects"))
+		  )
+		);
+
+		// If this is NOT already a repository and we're allowed to create a new one, do so
+		if(!$is_repo){
+			if($create_new){
+
+				if(!is_dir($parent)){
+					throw new Exception("Cannot create repository - parent directory does not exist");
+				}
+
+				if(!is_dir($repo_path) && !mkdir($repo_path)){
+					throw new Exception("Failed to create repository path");
+				}
+
+                $this->repo_path = $repo_path;
+
+				// If we're supposed to init the repo too, try to do that
+				if ($_init) {
+					if ($bare)
+						$this->run('init --bare');
+					else
+						$this->run('init');
+				}
+
+			// ...or bomb out if we're not allowed to.
+			} else{
+				throw new Exception("Repository path '$repo_path' does not exist");
+			}
+
+        // Repository already exists, so just store the path for later use
+		} else{
+            $this->repo_path = $repo_path;
+        }
+
 	}
 
 	/**
