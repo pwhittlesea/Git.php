@@ -36,10 +36,11 @@ class Git {
 	 * @param   string  repository path
 	 * @param   string  directory to source
 	 * @param   bool    is the repo a bare one?
+     * @param   string  the 'shared' option as per git init - (false|true|umask|group|all|world|everybody|0xxx)
 	 * @return  GitRepo
 	 */	
-	public static function &create($repo_path, $source = null, $bare = false) {
-		return GitRepo::create_new($repo_path, $source, $bare);
+	public static function &create($repo_path, $source = null, $bare = false, $shared = false) {
+		return GitRepo::create_new($repo_path, $source, $bare, $shared);
 	}
 
 	/**
@@ -95,19 +96,33 @@ class GitRepo {
 	 * @param   string  repository path
 	 * @param   string  directory to source
  	 * @param   bool    is the repo a bare one?
+     * @param   string  the 'shared' option as per git init - (false|true|umask|group|all|world|everybody|0xxx)
 	 * @return  GitRepo
 	 */	
-	public static function &create_new($repo_path, $source = null, $bare = false) {
+	public static function &create_new($repo_path, $source = null, $bare = false, $shared = false) {
+
 		if (is_dir($repo_path) && ((file_exists($repo_path."/.git") && is_dir($repo_path."/.git")) || (file_exists($repo_path."/HEAD") && is_dir($repo_path."/objects")))) {
-			throw new Exception('"$repo_path" is already a git repository');
+			throw new Exception("'$repo_path' is already a git repository");
 		} else {
+            $shared = strtolower(trim($shared));
+
+            // Sanity check the shared option
+            if(!preg_match('/^(true)|(umask)|(group)|(all)|(world)|(everybody)|(0\d{3})$/', $shared))
+                $shared = false;
+            
+
 			$repo = new self($repo_path, true, false, $bare);
 			if (is_string($source))
 				$repo->clone_from($source);
-			else if($bare)
-				$repo->run('init --bare');
-			else 
-				$repo->run('init');
+			else
+                $args = '';
+                if($bare)
+                    $args .= ' --bare';
+
+                if($shared)
+                    $args .= " --shared=$shared";
+
+				$repo->run("init $args");
 			return $repo;
 		}
 	}
