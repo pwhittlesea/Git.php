@@ -104,7 +104,7 @@ class GitRepo {
 		if (is_dir($repo_path) && ((file_exists($repo_path."/.git") && is_dir($repo_path."/.git")) || (file_exists($repo_path."/HEAD") && is_dir($repo_path."/objects")))) {
 			throw new Exception("'$repo_path' is already a git repository");
 		} else {
-            $shared = strtolower(trim($shared));
+            $shared = (trim($shared));
 
             // Sanity check the shared option
             if(!preg_match('/^(true)|(umask)|(group)|(all)|(world)|(everybody)|(0\d{3})$/', $shared))
