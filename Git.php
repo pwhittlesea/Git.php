@@ -36,7 +36,7 @@ class Git {
 	 * @param   string  repository path
 	 * @param   string  directory to source
 	 * @param   bool    is the repo a bare one?
-     * @param   string  the 'shared' option as per git init - (false|true|umask|group|all|world|everybody|0xxx)
+	 * @param   string  the 'shared' option as per git init - (false|true|umask|group|all|world|everybody|0xxx)
 	 * @return  GitRepo
 	 */
 	public static function &create($repo_path, $source = null, $bare = false, $shared = false) {
@@ -95,8 +95,8 @@ class GitRepo {
 	 * @access  public
 	 * @param   string  repository path
 	 * @param   string  directory to source
- 	 * @param   bool    is the repo a bare one?
-     * @param   string  the 'shared' option as per git init - (false|true|umask|group|all|world|everybody|0xxx)
+	 * @param   bool    is the repo a bare one?
+	 * @param   string  the 'shared' option as per git init - (false|true|umask|group|all|world|everybody|0xxx)
 	 * @return  GitRepo
 	 */
 	public static function &create_new($repo_path, $source = null, $bare = false, $shared = false) {
@@ -104,25 +104,26 @@ class GitRepo {
 		if (is_dir($repo_path) && ((file_exists($repo_path."/.git") && is_dir($repo_path."/.git")) || (file_exists($repo_path."/HEAD") && is_dir($repo_path."/objects")))) {
 			throw new Exception("'$repo_path' is already a git repository");
 		} else {
-            $shared = (trim($shared));
+			$shared = (trim($shared));
 
-            // Sanity check the shared option
-            if(!preg_match('/^(true)|(umask)|(group)|(all)|(world)|(everybody)|(0\d{3})$/', $shared))
-                $shared = false;
-
+			// Sanity check the shared option
+			if(!preg_match('/^(true)|(umask)|(group)|(all)|(world)|(everybody)|(0\d{3})$/', $shared)) {
+				$shared = false;
+			}
 
 			$repo = new self($repo_path, true, false, $bare);
-			if (is_string($source))
+			if (is_string($source)) {
 				$repo->clone_from($source);
-			else
-                $args = '';
-                if($bare)
-                    $args .= ' --bare';
+			} else {
+				$args = '';
+				if($bare)
+					$args .= ' --bare';
 
-                if($shared)
-                    $args .= " --shared=$shared";
+				if($shared)
+					$args .= " --shared=$shared";
 
 				$repo->run("init $args");
+			}
 			return $repo;
 		}
 	}
@@ -170,11 +171,11 @@ class GitRepo {
 		// It's a git repository if it contains a .git directory,
 		// or it's a bare repo with a HEAD file and objects dir.
 		$is_repo = (
-		  is_dir($repo_path) && (
-		    is_dir($repo_path."/.git") ||
-            is_file($repo_path."/.git") ||
-			(file_exists($repo_path."/HEAD") && is_dir($repo_path."/objects"))
-		  )
+			is_dir($repo_path) && (
+				is_dir($repo_path."/.git") ||
+				is_file($repo_path."/.git") ||
+				(file_exists($repo_path."/HEAD") && is_dir($repo_path."/objects"))
+			)
 		);
 
 		// If this is NOT already a repository and we're allowed to create a new one, do so
@@ -189,7 +190,7 @@ class GitRepo {
 					throw new Exception("Failed to create repository path");
 				}
 
-                $this->repo_path = $repo_path;
+				$this->repo_path = $repo_path;
 
 				// If we're supposed to init the repo too, try to do that
 				if ($_init) {
@@ -204,10 +205,10 @@ class GitRepo {
 				throw new Exception("Repository path '$repo_path' does not exist");
 			}
 
-        // Repository already exists, so just store the path for later use
+		// Repository already exists, so just store the path for later use
 		} else{
-            $this->repo_path = $repo_path;
-        }
+			$this->repo_path = $repo_path;
+		}
 
 	}
 
@@ -435,5 +436,3 @@ class GitRepo {
 	}
 
 }
-
-/* End Of File */
