@@ -6,11 +6,12 @@
  * A PHP git library
  *
  * @package    Git.php
- * @version    0.1.1-a
+ * @version    0.2
  * @author     James Brumond
+ * @author     Phillip Whittlesea
  * @copyright  Copyright 2010 James Brumond
- * @license    http://github.com/kbjr/Git.php
- * @link       http://code.kbjrweb.com/project/gitphp
+ * @copyright  Copyright 2012 Phillip Whittlesea
+ * @license    http://github.com/pwhittlesea/Git.php
  */
 
 if (__FILE__ == $_SERVER['SCRIPT_FILENAME']) die('Bad load order');
