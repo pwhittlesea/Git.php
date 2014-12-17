@@ -113,8 +113,8 @@ class GitRepo {
 			}
 
 			$repo = new self($repo_path, true, false, $bare);
-			if (is_string($source)) {
-				$repo->clone_from($source);
+			if (is_string($source) && is_dir($source)) {
+				$repo->clone_from($source, $bare);
 			} else {
 				$args = '';
 				if($bare)
@@ -316,8 +316,12 @@ class GitRepo {
 	 * @param   string  target directory
 	 * @return  string
 	 */
-	public function clone_to($target) {
-		return $this->run("clone --local ".$this->repo_path." $target");
+	public function clone_to($target, $bare = false) {
+		$args = "--local";
+		if ($bare) {
+			$args .= " --bare";
+		}
+		return $this->run("clone $args ".$this->repo_path." $target");
 	}
 
 	/**
@@ -330,8 +334,12 @@ class GitRepo {
 	 * @param   string  source directory
 	 * @return  string
 	 */
-	public function clone_from($source) {
-		return $this->run("clone --local $source ".$this->repo_path);
+	public function clone_from($source, $bare = false) {
+		$args = "--local";
+		if ($bare) {
+			$args .= " --bare";
+		}
+		return $this->run("clone $args $source ".$this->repo_path);
 	}
 
 	/**
@@ -344,8 +352,12 @@ class GitRepo {
 	 * @param   string  source url
 	 * @return  string
 	 */
-	public function clone_remote($source) {
-		return $this->run("clone $source ".$this->repo_path);
+	public function clone_remote($source, $bare = false) {
+		$args = "";
+		if ($bare) {
+			$args = "--bare";
+		}
+		return $this->run("clone $args $source ".$this->repo_path);
 	}
 
 	/**
